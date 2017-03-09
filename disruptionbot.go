@@ -12,11 +12,9 @@ import (
 
 func main() {
 	env.ReadEnv("./.env")
-
-	// start a websocket-based Real Time API session
-	fmt.Printf("Auth token: '%s'\n", os.Getenv("AUTH_TOKEN"))
+	fmt.Printf("Using auth token: '%s'\n", os.Getenv("AUTH_TOKEN"))
 	ws, id := slackConnect(os.Getenv("AUTH_TOKEN"))
-	fmt.Println("mybot ready, ^C exits")
+	fmt.Println("ready to disrupt")
 
 	for {
 		// read each incoming message
