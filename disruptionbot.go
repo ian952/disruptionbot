@@ -1,11 +1,9 @@
 package main
 
 import (
-	"encoding/csv"
 	"fmt"
 	"github.com/jpfuentes2/go-env"
 	"log"
-	"net/http"
 	"os"
 	"strings"
 )
@@ -13,8 +11,13 @@ import (
 func main() {
 	env.ReadEnv("./.env")
 	fmt.Printf("Using auth token: '%s'\n", os.Getenv("AUTH_TOKEN"))
-	ws, id := slackConnect(os.Getenv("AUTH_TOKEN"))
+	ws, _ := slackConnect(os.Getenv("AUTH_TOKEN"))
 	fmt.Println("ready to disrupt")
+
+	// XXX: Does not work if it has repeat letters
+	feridun := strings.Split("FERIDUN", "")
+
+	chatHistory := make(map[string]string)
 
 	for {
 		// read each incoming message
@@ -23,41 +26,33 @@ func main() {
 			log.Fatal(err)
 		}
 
-		// see if we're mentioned
-		if m.Type == "message" && strings.HasPrefix(m.Text, "<@"+id+">") {
-			// if so try to parse if
-			parts := strings.Fields(m.Text)
-			if len(parts) == 3 && parts[1] == "stock" {
-				// looks good, get the quote and reply with the result
-				go func(m Message) {
-					m.Text = getQuote(parts[2])
+		if m.Type == "message" {
+			content := strings.ToUpper(m.Text)
+			channel := m.Channel
+
+			cur := find(feridun, chatHistory[channel])
+			if cur == -1 && content == feridun[0] {
+				chatHistory[channel] = feridun[0]
+			} else if content == feridun[cur+1] {
+				if cur+1 == len(feridun)-1 {
+					m.Text = "DISRUPTIVE!!!"
 					postMessage(ws, m)
-				}(m)
-				// NOTE: the Message object is copied, this is intentional
+					chatHistory[channel] = ""
+				} else {
+					chatHistory[channel] = feridun[cur+1]
+				}
 			} else {
-				// huh?
-				m.Text = fmt.Sprintf("sorry, that does not compute\n")
-				postMessage(ws, m)
+				chatHistory[channel] = ""
 			}
 		}
 	}
 }
 
-// Get the quote via Yahoo. You should replace this method to something
-// relevant to your team!
-func getQuote(sym string) string {
-	sym = strings.ToUpper(sym)
-	url := fmt.Sprintf("http://download.finance.yahoo.com/d/quotes.csv?s=%s&f=nsl1op&e=.csv", sym)
-	resp, err := http.Get(url)
-	if err != nil {
-		return fmt.Sprintf("error: %v", err)
+func find(s []string, e string) int {
+	for i, a := range s {
+		if a == e {
+			return i
+		}
 	}
-	rows, err := csv.NewReader(resp.Body).ReadAll()
-	if err != nil {
-		return fmt.Sprintf("error: %v", err)
-	}
-	if len(rows) >= 1 && len(rows[0]) == 5 {
-		return fmt.Sprintf("%s (%s) is trading at $%s", rows[0][0], rows[0][1], rows[0][2])
-	}
-	return fmt.Sprintf("unknown response format (symbol was \"%s\")", sym)
+	return -1
 }
