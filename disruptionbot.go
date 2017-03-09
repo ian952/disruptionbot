@@ -4,12 +4,14 @@ import (
 	"fmt"
 	"github.com/jpfuentes2/go-env"
 	"log"
+	"net/http"
 	"os"
 	"strings"
 )
 
 func main() {
 	env.ReadEnv("./.env")
+	go bindPort()
 	fmt.Printf("Using auth token: '%s'\n", os.Getenv("AUTH_TOKEN"))
 	ws, _ := slackConnect(os.Getenv("AUTH_TOKEN"))
 	fmt.Println("ready to disrupt")
@@ -46,6 +48,14 @@ func main() {
 			}
 		}
 	}
+}
+
+func bindPort() {
+	port := os.Getenv("PORT")
+	if port == "" {
+		port = "8080"
+	}
+	http.ListenAndServe(":"+port, nil)
 }
 
 func find(s []string, e string) int {
