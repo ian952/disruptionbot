@@ -1,0 +1,15 @@
+{
+	"ImportPath": "github.com/ian952/disruptionbot",
+	"GoVersion": "go1.8",
+	"GodepVersion": "v79",
+	"Deps": [
+		{
+			"ImportPath": "github.com/jpfuentes2/go-env",
+			"Rev": "8e0a68de05f21bcefcd581c6b934a1d1e4390fa1"
+		},
+		{
+			"ImportPath": "golang.org/x/net/websocket",
+			"Rev": "a6577fac2d73be281a500b310739095313165611"
+		}
+	]
+}
