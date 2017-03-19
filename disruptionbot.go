@@ -62,7 +62,7 @@ func bindPort() {
 
 func keepAppAwake() {
 	for {
-		time.Sleep(time.Minute * 58)
+		time.Sleep(time.Minute * 25)
 		http.Get("https://disruption-bot.herokuapp.com/")
 	}
 }
