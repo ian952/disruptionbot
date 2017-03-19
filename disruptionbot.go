@@ -7,11 +7,13 @@ import (
 	"net/http"
 	"os"
 	"strings"
+	"time"
 )
 
 func main() {
 	env.ReadEnv("./.env")
 	go bindPort()
+	go keepAppAwake()
 	fmt.Printf("Using auth token: '%s'\n", os.Getenv("AUTH_TOKEN"))
 	ws, _ := slackConnect(os.Getenv("AUTH_TOKEN"))
 	fmt.Println("ready to disrupt")
@@ -56,6 +58,13 @@ func bindPort() {
 		port = "8080"
 	}
 	http.ListenAndServe(":"+port, nil)
+}
+
+func keepAppAwake() {
+	for {
+		time.Sleep(time.Minute * 58)
+		http.Get("https://disruption-bot.herokuapp.com/")
+	}
 }
 
 func find(s []string, e string) int {
